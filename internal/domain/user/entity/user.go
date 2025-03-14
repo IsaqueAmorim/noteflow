@@ -1,9 +1,11 @@
 package user
 
 import (
+	"errors"
 	"strings"
 	"time"
 
+	"github.com/IsaqueAmorim/noteflow/internal/domain/notification"
 	valueobjects "github.com/IsaqueAmorim/noteflow/internal/domain/user/value-objects"
 	"github.com/google/uuid"
 )
@@ -46,34 +48,78 @@ func NewUser(username, emailAdress, password string, role Role) *User {
 	return &user
 }
 
-func (u *User) validate() {
+func (u *User) validate() *notification.Notification {
+	notification := notification.NewNotification()
+
 	if strings.TrimSpace(u.username) == "" {
-		panic("username cannot be empty")
+		notification.AddError(errors.New("username cannot be empty"))
 	}
 
-	if u.email == nil || !u.email.IsVerified() {
-		panic("invalid email address")
-	}
+	// if u.email == nil || !u.email.IsVerified() {
+	// 	notification.AddError(errors.New("invalid email address"))
+	// }
 
 	if u.password == nil || !u.password.IsValid() {
-		panic("invalid password")
+		notification.AddError(errors.New("invalid password"))
 	}
 
 	if u.role != admin && u.role != user {
-		panic("invalid role")
+		notification.AddError(errors.New("invalid role"))
 	}
 
 	if u.createAt.IsZero() {
-		panic("creation date cannot be zero")
+		notification.AddError(errors.New("creation date cannot be zero"))
 	}
 
 	if u.updatedAt.IsZero() {
-		panic("updated date cannot be zero")
+		notification.AddError(errors.New("updated date cannot be zero"))
 	}
 
 	if u.lastActiveAt.IsZero() {
-		panic("last active date cannot be zero")
+		notification.AddError(errors.New("last active date cannot be zero"))
 	}
+
+	return notification
+}
+
+func (u *User) ID() string {
+	return u.id
+}
+
+func (u *User) Username() string {
+	return u.username
+}
+
+func (u *User) Email() *valueobjects.Email {
+	return u.email
+}
+
+func (u *User) Password() *valueobjects.Password {
+	return u.password
+}
+
+func (u *User) CreatedAt() time.Time {
+	return u.createAt
+}
+
+func (u *User) UpdatedAt() time.Time {
+	return u.updatedAt
+}
+
+func (u *User) Role() Role {
+	return u.role
+}
+
+func (u *User) IsActive() bool {
+	return u.isActive
+}
+
+func (u *User) ActiveAt() time.Time {
+	return u.activeAt
+}
+
+func (u *User) LastActiveAt() time.Time {
+	return u.lastActiveAt
 }
 
 func (u *User) Activate() {

@@ -1,8 +1,6 @@
 package valueobjects
 
 import (
-	"strings"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,21 +25,21 @@ func NewPassword(plainText string) *Password {
 
 func validate(s string) {
 
-	if len(s) < 8 {
-		println("Error: Password must be at least 8 characters long")
-	}
-	if !strings.ContainsAny(s, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-		println("Error: Password must contain at least one uppercase letter")
-	}
-	if !strings.ContainsAny(s, "abcdefghijklmnopqrstuvwxyz") {
-		println("Error: Password must contain at least one lowercase letter")
-	}
-	if !strings.ContainsAny(s, "0123456789") {
-		println("Error: Password must contain at least one number")
-	}
-	if !strings.ContainsAny(s, "!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~") {
-		println("Error: Password must contain at least one special character")
-	}
+	// if len(s) < 8 {
+	// 	println("Error: Password must be at least 8 characters long")
+	// }
+	// if !strings.ContainsAny(s, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+	// 	println("Error: Password must contain at least one uppercase letter")
+	// }
+	// if !strings.ContainsAny(s, "abcdefghijklmnopqrstuvwxyz") {
+	// 	println("Error: Password must contain at least one lowercase letter")
+	// }
+	// if !strings.ContainsAny(s, "0123456789") {
+	// 	println("Error: Password must contain at least one number")
+	// }
+	// if !strings.ContainsAny(s, "!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~") {
+	// 	println("Error: Password must contain at least one special character")
+	// }
 }
 
 func (p Password) Check(plainText string) bool {
