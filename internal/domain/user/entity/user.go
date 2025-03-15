@@ -30,13 +30,15 @@ type User struct {
 	lastActiveAt time.Time
 }
 
-func NewUser(username, emailAdress, password string, role Role) *User {
+func NewUser(username, emailAdress, password string, role Role) (*User, *notification.Notification) {
+
+	pass, notification := valueobjects.NewPassword(password)
 
 	user := User{
 		id:           uuid.New().String(),
 		username:     username,
 		email:        valueobjects.NewEmail(emailAdress),
-		password:     valueobjects.NewPassword(password),
+		password:     pass,
 		createAt:     time.Now().UTC(),
 		updatedAt:    time.Now().UTC(),
 		role:         role,
@@ -44,8 +46,9 @@ func NewUser(username, emailAdress, password string, role Role) *User {
 		lastActiveAt: time.Now().UTC(),
 	}
 
-	user.validate()
-	return &user
+	notification.Merge(user.validate())
+
+	return &user, notification
 }
 
 func (u *User) validate() *notification.Notification {
@@ -136,20 +139,30 @@ func (u *User) ChageEmail(emailAdress string) {
 	//TODO: LOG EMAIL CHANGED (USER ID, OLD EMAIL, NEW EMAIL)
 }
 
-func (u *User) ChangePassword(password string) {
-	u.password = valueobjects.NewPassword(password)
+func (u *User) ChangePassword(password string) *notification.Notification {
+
+	pass, notification := valueobjects.NewPassword(password)
+
+	if notification.HasErrors() {
+		return notification
+	}
+
+	u.password = pass
 	u.updatedAt = time.Now().UTC()
-	u.validate()
+
+	notification = u.validate()
+
+	return notification
 }
 
-func (u *User) ChangeRole(role Role) {
+func (u *User) ChangeRole(role Role) *notification.Notification {
 	u.role = role
 	u.updatedAt = time.Now().UTC()
-	u.validate()
+	return u.validate()
 }
 
-func (u *User) ChangeUsername(username string) {
+func (u *User) ChangeUsername(username string) *notification.Notification {
 	u.username = username
 	u.updatedAt = time.Now().UTC()
-	u.validate()
+	return u.validate()
 }

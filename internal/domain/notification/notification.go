@@ -33,3 +33,17 @@ func (n *Notification) String() string {
 func (n *Notification) CountErrors() int {
 	return len(n.errors)
 }
+
+func (n *Notification) Errors() []error {
+	return n.errors
+}
+
+func (n *Notification) Merge(notification *Notification) {
+	for _, err := range notification.errors {
+		n.AddError(err)
+	}
+}
+
+func (n *Notification) Clear() {
+	n.errors = []error{}
+}

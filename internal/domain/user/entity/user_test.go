@@ -12,9 +12,10 @@ func TestNewUser(t *testing.T) {
 
 		const pass = "StrongPassword123!"
 		email := valueobjects.NewEmail("test@example.com")
-		user := NewUser("testuser", email.Address(), pass, user)
+		user, notification := NewUser("testuser", email.Address(), pass, user)
 
 		assert.NotNil(t, user)
+		assert.Empty(t, notification.Errors())
 		assert.Equal(t, "testuser", user.Username())
 		assert.Equal(t, email.Address(), user.Email().Address())
 		assert.True(t, user.Password().Check(pass))
@@ -25,9 +26,8 @@ func TestNewUser(t *testing.T) {
 	})
 
 	t.Run("should return String for invalid user fields", func(t *testing.T) {
-		user := NewUser("", "asdasd@qwasd.com", "StrongPassword123", 99) // Invalid role
+		_, notification := NewUser("", "asdasd@qwasd.com", "StrongPassword123", 99) // Invalid role
 
-		notification := user.validate()
 		assert.NotNil(t, notification)
 		assert.True(t, notification.HasErrors())
 		assert.Contains(t, notification.String(), "username cannot be empty")
@@ -38,13 +38,12 @@ func TestNewUser(t *testing.T) {
 }
 
 func TestActivateUser(t *testing.T) {
-	t.Run("should activate user", func(t *testing.T) {
-		email := valueobjects.NewEmail("test@example.com")
-		password := valueobjects.NewPassword("StrongPassword123!")
-		user := NewUser("testuser", email.Address(), password.Hash(), user)
+	t.Run("should activate valid user", func(t *testing.T) {
+		user, notification := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
 
 		user.Activate()
 
+		assert.Empty(t, notification.Errors())
 		assert.True(t, user.IsActive())
 		assert.NotZero(t, user.ActiveAt())
 	})
@@ -52,24 +51,23 @@ func TestActivateUser(t *testing.T) {
 
 func TestChangeEmail(t *testing.T) {
 	t.Run("should change email successfully", func(t *testing.T) {
-		email := valueobjects.NewEmail("test@example.com")
-		password := valueobjects.NewPassword("StrongPassword123!")
-		user := NewUser("testuser", email.Address(), password.Hash(), user)
+		user, notification := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
+
+		assert.Empty(t, notification.Errors())
 
 		newEmail := "newemail@example.com"
 		user.ChageEmail(newEmail)
 
 		assert.Equal(t, newEmail, user.Email().Address())
+		assert.Empty(t, notification.Errors())
 		assert.NotZero(t, user.UpdatedAt())
 	})
 
 	t.Run("should return error for invalid email", func(t *testing.T) {
-		email := valueobjects.NewEmail("test@example.com")
-		password := valueobjects.NewPassword("StrongPassword123!")
-		user := NewUser("testuser", email.Address(), password.Hash(), user)
+		user, errs := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
 
 		user.ChageEmail("invalid-email")
-
+		errs.Clear()
 		// notification := user.validate()
 		// assert.NotNil(t, notification)
 		// assert.True(t, notification.HasErrors())
@@ -82,78 +80,82 @@ func TestChangePassword(t *testing.T) {
 		const pass = "StrongPassword123!"
 		const newPass = "NewStrongPassword123!"
 
-		email := valueobjects.NewEmail("test@example.com")
-		user := NewUser("testuser", email.Address(), pass, user)
+		user, notification := NewUser("testuser", "test@example.com", pass, user)
 
-		user.ChangePassword(newPass)
+		assert.Empty(t, notification.Errors())
 
+		notification = user.ChangePassword(newPass)
+
+		assert.Empty(t, notification.Errors())
 		assert.True(t, user.Password().Check(newPass))
 		assert.NotZero(t, user.UpdatedAt())
 	})
 
 	t.Run("should return error for invalid password", func(t *testing.T) {
-		email := valueobjects.NewEmail("test@example.com")
-		password := valueobjects.NewPassword("StrongPassword123!")
-		user := NewUser("testuser", email.Address(), password.Hash(), user)
+		user, notification := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
 
-		user.ChangePassword("")
+		assert.Empty(t, notification.Errors())
 
-		notification := user.validate()
+		notification = user.ChangePassword("")
+
 		assert.NotNil(t, notification)
-		//assert.True(t, notification.HasErrors())
-		//assert.Contains(t, notification.String(), "invalid password")
+		assert.True(t, notification.HasErrors())
+		assert.Equal(t, 1, notification.CountErrors())
+		assert.Contains(t, notification.String(), "Password cannot be empty")
 	})
 }
 
 func TestChangeRole(t *testing.T) {
 	t.Run("should change role successfully", func(t *testing.T) {
-		email := valueobjects.NewEmail("test@example.com")
-		password := valueobjects.NewPassword("StrongPassword123!")
-		user := NewUser("testuser", email.Address(), password.Hash(), user)
+		user, notification := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
 
-		user.ChangeRole(admin)
+		assert.Empty(t, notification.Errors())
 
+		notification = user.ChangeRole(admin)
+
+		assert.Empty(t, notification.Errors())
 		assert.Equal(t, admin, user.Role())
 		assert.NotZero(t, user.UpdatedAt())
 	})
 
 	t.Run("should return error for invalid role", func(t *testing.T) {
-		email := valueobjects.NewEmail("test@example.com")
-		password := valueobjects.NewPassword("StrongPassword123!")
-		user := NewUser("testuser", email.Address(), password.Hash(), user)
+		user, notification := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
 
-		user.ChangeRole(99) // Invalid role
+		assert.Empty(t, notification.Errors())
 
-		notification := user.validate()
+		notification = user.ChangeRole(99)
+
 		assert.NotNil(t, notification)
 		assert.True(t, notification.HasErrors())
+		assert.Equal(t, 1, notification.CountErrors())
 		assert.Contains(t, notification.String(), "invalid role")
 	})
 }
 
 func TestChangeUsername(t *testing.T) {
 	t.Run("should change username successfully", func(t *testing.T) {
-		email := valueobjects.NewEmail("test@example.com")
-		password := valueobjects.NewPassword("StrongPassword123!")
-		user := NewUser("testuser", email.Address(), password.Hash(), user)
+		user, notification := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
+
+		assert.Empty(t, notification.Errors())
 
 		newUsername := "newusername"
-		user.ChangeUsername(newUsername)
+		notification = user.ChangeUsername(newUsername)
 
+		assert.Empty(t, notification.Errors())
 		assert.Equal(t, newUsername, user.Username())
 		assert.NotZero(t, user.UpdatedAt())
 	})
 
 	t.Run("should return error for empty username", func(t *testing.T) {
-		email := valueobjects.NewEmail("test@example.com")
-		password := valueobjects.NewPassword("StrongPassword123!")
-		user := NewUser("testuser", email.Address(), password.Hash(), user)
+		user, notification := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
 
-		user.ChangeUsername("")
+		assert.Empty(t, notification.Errors())
 
-		notification := user.validate()
+		notification = user.ChangeUsername("")
+
 		assert.NotNil(t, notification)
 		assert.True(t, notification.HasErrors())
+		assert.Equal(t, 1, notification.CountErrors())
 		assert.Contains(t, notification.String(), "username cannot be empty")
 	})
 }
