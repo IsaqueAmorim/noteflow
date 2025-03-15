@@ -13,7 +13,6 @@
 	// The 'service' property is the name of the service for the container that VS Code should
 	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
 	"service": "app",
-	"postStartCommand": "zsh",
 
 	// The optional 'workspaceFolder' property is the path VS Code should open by default when
 	// connected. This is typically a file mount in .devcontainer/docker-compose.yml
@@ -21,8 +20,8 @@
 	"features": {
 		"ghcr.io/devcontainers/features/common-utils:2": {},
 		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
-			"plugins": "git git-flow F-Sy-H zsh-autosuggestions zsh-completions zsh-syntax-highlighting fast-syntax-highlighting zsh-autocomplete",
-			"omzPlugins": "https://github.com/z-shell/F-Sy-H https://github.com/zsh-users/zsh-autosuggestions https://github.com/zsh-users/zsh-completions https://github.com/zsh-users/zsh-syntax-highlighting https://github.com/zdharma-continuum/fast-syntax-highlighting https://github.com/marlonrichert/zsh-autocomplete"
+			"plugins": "git git-flow F-Sy-H zsh-autosuggestions zsh-syntax-highlighting fast-syntax-highlighting zsh-autocomplete",
+			"omzPlugins": "https://github.com/z-shell/F-Sy-H https://github.com/zsh-users/zsh-autosuggestions https://github.com/zsh-users/zsh-syntax-highlighting https://github.com/zdharma-continuum/fast-syntax-highlighting https://github.com/marlonrichert/zsh-autocomplete"
 		},
 		"ghcr.io/stuartleeks/dev-container-features/shell-history:0": {}
 	},
@@ -34,9 +33,23 @@
 				"github.copilot",
 				"github.copilot-chat",
 				"ms-azuretools.vscode-docker"
-			]
+			],
+			"settings": {
+
+				//GO CONFIG
+				"go.useLanguageServer": true,
+				"go.toolsManagement.autoUpdate": true,
+				"go.toolsManagement.autoInstall": true,
+
+				//EDITOR CONFIG
+				"editor.formatOnSave": true,
+				"editor.formatOnSaveMode": "file",
+				"editor.defaultFormatter": "golang.go",
+				"editor.formatOnType": true,
+				"editor.formatOnPaste": true
+			}
 		}
-	}
+	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -51,7 +64,8 @@
 	// "shutdownAction": "none",
 
 	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "cat /etc/os-release",
+	"postCreateCommand": "go install golang.org/x/tools/gopls@latest && go install github.com/cweill/gotests/gotests@latest && go install github.com/fatih/gomodifytags@latest && go install github.com/josharian/impl@latest && go install github.com/haya14busa/goplay/cmd/goplay@latest && go install github.com/go-delve/delve/cmd/dlv@latest && go install honnef.co/go/tools/cmd/staticcheck@latest"
+
 
 	// Configure tool-specific properties.
 	// "customizations": {},
