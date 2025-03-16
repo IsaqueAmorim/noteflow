@@ -1,8 +1,11 @@
 package valueobjects
 
 import (
+	"errors"
 	"regexp"
 	"strings"
+
+	"github.com/IsaqueAmorim/noteflow/internal/domain/notification"
 )
 
 type Email struct {
@@ -12,17 +15,15 @@ type Email struct {
 	isVerified bool
 }
 
-func NewEmail(address string) *Email {
+func NewEmail(address string) (*Email, *notification.Notification) {
 	address = strings.TrimSpace(address)
-	if address == "" {
-		return nil
+	notification := validateEmail(address)
+
+	if notification.HasErrors() {
+		return &Email{}, notification
 	}
 
 	atIndex := strings.LastIndex(address, "@")
-	if atIndex < 1 || atIndex == len(address)-1 {
-		return nil
-	}
-
 	local := address[:atIndex]
 	domain := address[atIndex+1:]
 
@@ -33,32 +34,44 @@ func NewEmail(address string) *Email {
 		isVerified: false,
 	}
 
-	if !email.validate() {
-		return nil
-	}
-
-	return email
+	return email, notification
 }
 
-func (e *Email) validate() bool {
+func validateEmail(address string) *notification.Notification {
+	notification := notification.NewNotification()
+
+	if address == "" {
+		notification.AddError(errors.New("email address cannot be empty"))
+		return notification
+	}
+
+	atIndex := strings.LastIndex(address, "@")
+	if atIndex < 0 {
+		notification.AddError(errors.New("invalid email format: '@' is missing"))
+		return notification
+	}
+
+	if atIndex == len(address)-1 || atIndex == 0 {
+		notification.AddError(errors.New("invalid email format: '@' is misplaced"))
+	}
+
+	local := address[:atIndex]
+	domain := address[atIndex+1:]
+
+	if len(local) < 1 {
+		notification.AddError(errors.New("local part of the email must have at least one character"))
+	}
+
+	if len(domain) < 3 || !strings.Contains(domain, ".") {
+		notification.AddError(errors.New("domain part of the email is invalid"))
+	}
+
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-	if !emailRegex.MatchString(e.address) {
-		return false
+	if !emailRegex.MatchString(address) {
+		notification.AddError(errors.New("email address does not match the required format"))
 	}
 
-	if len(e.local) < 1 {
-		return false
-	}
-
-	if len(e.domain) < 3 || !strings.Contains(e.domain, ".") {
-		return false
-	}
-
-	return true
-}
-
-func (e *Email) Validate() {
-	e.isVerified = true
+	return notification
 }
 
 func (e *Email) Address() string {
@@ -71,4 +84,8 @@ func (e *Email) Local() string {
 
 func (e *Email) IsVerified() bool {
 	return e.isVerified
+}
+
+func (e *Email) Validate() {
+	e.isVerified = true
 }

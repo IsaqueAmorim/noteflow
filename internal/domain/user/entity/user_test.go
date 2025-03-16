@@ -11,8 +11,10 @@ func TestNewUser(t *testing.T) {
 	t.Run("should create a valid user", func(t *testing.T) {
 
 		const pass = "StrongPassword123!"
-		email := valueobjects.NewEmail("test@example.com")
+		email, emailNotification := valueobjects.NewEmail("test@example.com")
 		user, notification := NewUser("testuser", email.Address(), pass, user)
+
+		notification.Merge(emailNotification)
 
 		assert.NotNil(t, user)
 		assert.Empty(t, notification.Errors())
@@ -31,8 +33,8 @@ func TestNewUser(t *testing.T) {
 		assert.NotNil(t, notification)
 		assert.True(t, notification.HasErrors())
 		assert.Contains(t, notification.String(), "username cannot be empty")
-		//assert.Contains(t, notification.String(), "invalid email address")
-		//assert.Contains(t, notification.String(), "invalid password")
+		// assert.Contains(t, notification.String(), "invalid email address")
+		// assert.Contains(t, notification.String(), "invalid password")
 		assert.Contains(t, notification.String(), "invalid role")
 	})
 }
@@ -56,8 +58,9 @@ func TestChangeEmail(t *testing.T) {
 		assert.Empty(t, notification.Errors())
 
 		newEmail := "newemail@example.com"
-		user.ChageEmail(newEmail)
+		notification = user.ChangeEmail(newEmail)
 
+		assert.Empty(t, notification.Errors())
 		assert.Equal(t, newEmail, user.Email().Address())
 		assert.Empty(t, notification.Errors())
 		assert.NotZero(t, user.UpdatedAt())
@@ -66,12 +69,12 @@ func TestChangeEmail(t *testing.T) {
 	t.Run("should return error for invalid email", func(t *testing.T) {
 		user, errs := NewUser("testuser", "test@example.com", "StrongPassword123!", user)
 
-		user.ChageEmail("invalid-email")
+		notification := user.ChangeEmail("invalid-email")
 		errs.Clear()
-		// notification := user.validate()
-		// assert.NotNil(t, notification)
-		// assert.True(t, notification.HasErrors())
-		//assert.Contains(t, notification.String(), "invalid email address")
+
+		assert.NotNil(t, notification)
+		assert.True(t, notification.HasErrors())
+		// assert.Contains(t, notification.String(), "invalid email address")
 	})
 }
 

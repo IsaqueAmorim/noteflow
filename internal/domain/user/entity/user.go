@@ -33,11 +33,14 @@ type User struct {
 func NewUser(username, emailAdress, password string, role Role) (*User, *notification.Notification) {
 
 	pass, notification := valueobjects.NewPassword(password)
+	email, emailNotification := valueobjects.NewEmail(emailAdress)
+
+	notification.Merge(emailNotification)
 
 	user := User{
 		id:           uuid.New().String(),
 		username:     username,
-		email:        valueobjects.NewEmail(emailAdress),
+		email:        email,
 		password:     pass,
 		createAt:     time.Now().UTC(),
 		updatedAt:    time.Now().UTC(),
@@ -62,9 +65,9 @@ func (u *User) validate() *notification.Notification {
 	// 	notification.AddError(errors.New("invalid email address"))
 	// }
 
-	if u.password == nil || !u.password.IsValid() {
-		notification.AddError(errors.New("invalid password"))
-	}
+	// if u.password == nil || !u.password.IsValid() {
+	// 	notification.AddError(errors.New("invalid password"))
+	// }
 
 	if u.role != admin && u.role != user {
 		notification.AddError(errors.New("invalid role"))
@@ -131,11 +134,19 @@ func (u *User) Activate() {
 	u.validate()
 }
 
-func (u *User) ChageEmail(emailAdress string) {
+func (u *User) ChangeEmail(emailAdress string) *notification.Notification {
+	email, notification := valueobjects.NewEmail(emailAdress)
 
-	u.email = valueobjects.NewEmail(emailAdress)
+	if notification.HasErrors() {
+		return notification
+	}
+
+	u.email = email
 	u.updatedAt = time.Now().UTC()
-	u.validate()
+
+	notification = u.validate()
+
+	return notification
 	//TODO: LOG EMAIL CHANGED (USER ID, OLD EMAIL, NEW EMAIL)
 }
 
