@@ -24,9 +24,14 @@ jobs:
         with:
           go-version: '1.24.1'
 
-      - name: Install Dependencies
-        run: go mod tidy
+      - name: Clean Go Module Cache
+        run: go clean -modcache
 
+      - name: Remove Go Module Cache (if needed)
+        run: rm -rf ~/go/pkg/mod || true
+
+      - name: Download Dependencies
+        run: go mod download
       - name: Lint Code
         uses: golangci/golangci-lint-action@v3
         with:
