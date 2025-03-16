@@ -13,7 +13,6 @@ type Email struct {
 }
 
 func NewEmail(address string) *Email {
-
 	address = strings.TrimSpace(address)
 	if address == "" {
 		return nil
@@ -27,32 +26,35 @@ func NewEmail(address string) *Email {
 	local := address[:atIndex]
 	domain := address[atIndex+1:]
 
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-	if !emailRegex.MatchString(address) {
-		return nil
-	}
-
-	if len(local) < 1 {
-		return nil
-	}
-
-	if len(domain) < 3 || !strings.Contains(domain, ".") {
-		return nil
-	}
-
-	return &Email{
+	email := &Email{
 		address:    address,
 		local:      local,
 		domain:     domain,
 		isVerified: false,
 	}
+
+	if !email.validate() {
+		return nil
+	}
+
+	return email
 }
 
-func (e *Email) validate() {
-	if e == nil {
-		return
+func (e *Email) validate() bool {
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	if !emailRegex.MatchString(e.address) {
+		return false
 	}
-	e.isVerified = true
+
+	if len(e.local) < 1 {
+		return false
+	}
+
+	if len(e.domain) < 3 || !strings.Contains(e.domain, ".") {
+		return false
+	}
+
+	return true
 }
 
 func (e *Email) Validate() {
