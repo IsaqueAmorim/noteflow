@@ -18,16 +18,15 @@ const (
 )
 
 type User struct {
-	id           string
-	username     string
-	email        *valueobjects.Email
-	password     *valueobjects.Password
-	createAt     time.Time
-	updatedAt    time.Time
-	role         Role
-	isActive     bool
-	activeAt     time.Time
-	lastActiveAt time.Time
+	id        string
+	username  string
+	email     *valueobjects.Email
+	password  *valueobjects.Password
+	createAt  time.Time
+	updatedAt time.Time
+	role      Role
+	isActive  bool
+	activeAt  time.Time
 }
 
 func NewUser(username, emailAdress, password string, role Role) (*User, *notification.Notification) {
@@ -35,15 +34,15 @@ func NewUser(username, emailAdress, password string, role Role) (*User, *notific
 	pass, notification := valueobjects.NewPassword(password)
 
 	user := User{
-		id:           uuid.New().String(),
-		username:     username,
-		email:        valueobjects.NewEmail(emailAdress),
-		password:     pass,
-		createAt:     time.Now().UTC(),
-		updatedAt:    time.Now().UTC(),
-		role:         role,
-		isActive:     false,
-		lastActiveAt: time.Now().UTC(),
+		id:        uuid.New().String(),
+		username:  username,
+		email:     valueobjects.NewEmail(emailAdress),
+		password:  pass,
+		createAt:  time.Now().UTC(),
+		updatedAt: time.Now().UTC(),
+		role:      role,
+		isActive:  false,
+		activeAt:  time.Now().UTC(),
 	}
 
 	notification.Merge(user.validate())
@@ -62,10 +61,6 @@ func (u *User) validate() *notification.Notification {
 	// 	notification.AddError(errors.New("invalid email address"))
 	// }
 
-	if u.password == nil || !u.password.IsValid() {
-		notification.AddError(errors.New("invalid password"))
-	}
-
 	if u.role != admin && u.role != user {
 		notification.AddError(errors.New("invalid role"))
 	}
@@ -78,8 +73,8 @@ func (u *User) validate() *notification.Notification {
 		notification.AddError(errors.New("updated date cannot be zero"))
 	}
 
-	if u.lastActiveAt.IsZero() {
-		notification.AddError(errors.New("last active date cannot be zero"))
+	if u.activeAt.IsZero() {
+		notification.AddError(errors.New("active date cannot be zero"))
 	}
 
 	return notification
@@ -121,14 +116,19 @@ func (u *User) ActiveAt() time.Time {
 	return u.activeAt
 }
 
-func (u *User) LastActiveAt() time.Time {
-	return u.lastActiveAt
-}
+func (u *User) Activate() *notification.Notification {
 
-func (u *User) Activate() {
+	notification := notification.NewNotification()
+
+	if u.isActive {
+		notification.AddError(errors.New("user is already active"))
+		return notification
+	}
+
 	u.isActive = true
-	u.activeAt = time.Now().UTC()
 	u.validate()
+
+	return notification
 }
 
 func (u *User) ChageEmail(emailAdress string) {
@@ -165,4 +165,25 @@ func (u *User) ChangeUsername(username string) *notification.Notification {
 	u.username = username
 	u.updatedAt = time.Now().UTC()
 	return u.validate()
+}
+
+func (u *User) Deactivate() *notification.Notification {
+
+	notification := notification.NewNotification()
+
+	if !u.isActive {
+		notification.AddError(errors.New("user is already deactivated"))
+		return notification
+	}
+
+	u.isActive = false
+	u.updatedAt = time.Now().UTC()
+	u.validate()
+
+	return notification
+}
+
+func (u *User) UpdateActiveAt() {
+	u.activeAt = time.Now().UTC()
+	u.updatedAt = time.Now().UTC()
 }

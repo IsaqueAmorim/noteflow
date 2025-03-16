@@ -13,6 +13,8 @@ type Password struct {
 	salt string
 }
 
+var bcryptFunc = bcrypt.GenerateFromPassword
+
 func NewPassword(plainText string) (*Password, *notification.Notification) {
 	notification := validate(plainText)
 
@@ -20,8 +22,9 @@ func NewPassword(plainText string) (*Password, *notification.Notification) {
 		return &Password{}, notification
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(plainText), bcrypt.DefaultCost)
+	hash, err := bcryptFunc([]byte(plainText), bcrypt.DefaultCost)
 	if err != nil {
+		notification.AddError(err)
 		return &Password{}, notification
 	}
 

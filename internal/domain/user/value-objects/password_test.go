@@ -1,6 +1,7 @@
 package valueobjects
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,11 +16,6 @@ func TestNewPassword(t *testing.T) {
 		assert.Empty(t, errs.Errors())
 		assert.True(t, password.Check(plainText))
 	})
-
-	t.Run("should return an empty password on bcrypt error", func(t *testing.T) {
-		// Simulate bcrypt error by passing an invalid cost (not directly testable here)
-		// This would require mocking bcrypt.GenerateFromPassword
-	})
 }
 
 func TestValidate(t *testing.T) {
@@ -32,6 +28,13 @@ func TestValidate(t *testing.T) {
 		_, notification := NewPassword("Short1!")
 		assert.True(t, notification.HasErrors())
 		assert.Contains(t, notification.String(), "Password must be at least 8 characters long")
+	})
+
+	t.Run("should return error for empty password", func(t *testing.T) {
+		_, notification := NewPassword("")
+		assert.True(t, notification.HasErrors())
+		assert.Equal(t, 1, notification.CountErrors())
+		assert.Contains(t, notification.String(), "Password cannot be empty")
 	})
 
 	t.Run("should return error for password without uppercase letter", func(t *testing.T) {
@@ -105,5 +108,18 @@ func TestPasswordIsValid(t *testing.T) {
 		password, errs := NewPassword("Valid123!")
 		assert.Empty(t, errs.Errors())
 		assert.True(t, password.IsValid())
+	})
+}
+
+func TestBcrypt(t *testing.T) {
+	t.Run("should return an empty password on bcrypt error", func(t *testing.T) {
+
+		bcryptFunc = func(p []byte, cost int) ([]byte, error) {
+			return nil, errors.New("bcrypt error")
+		}
+
+		_, notification := NewPassword("Valid123!")
+
+		assert.NotEmpty(t, notification)
 	})
 }
