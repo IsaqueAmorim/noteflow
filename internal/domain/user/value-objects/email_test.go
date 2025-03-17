@@ -22,7 +22,7 @@ func TestNewEmail(t *testing.T) {
 
 		assert.NotNil(t, email)
 		assert.True(t, notification.HasErrors())
-		assert.Equal(t, notification.CountErrors(), 1)
+		assert.Equal(t, 1, notification.CountErrors())
 		assert.Contains(t, notification.String(), "email address cannot be empty")
 	})
 
@@ -31,7 +31,7 @@ func TestNewEmail(t *testing.T) {
 
 		assert.NotNil(t, email)
 		assert.True(t, notification.HasErrors())
-		assert.Equal(t, notification.CountErrors(), 1)
+		assert.Equal(t, 1, notification.CountErrors())
 		assert.Contains(t, notification.String(), "invalid email format: '@' is missing")
 	})
 
@@ -40,7 +40,7 @@ func TestNewEmail(t *testing.T) {
 
 		assert.NotNil(t, email)
 		assert.True(t, notification.HasErrors())
-		assert.Equal(t, notification.CountErrors(), 3)
+		assert.Equal(t, 3, notification.CountErrors())
 		assert.Contains(t, notification.String(), "local part of the email must have at least one character")
 		assert.Contains(t, notification.String(), "email address does not match the required format")
 		assert.Contains(t, notification.String(), "invalid email format: '@' is misplaced")
@@ -51,7 +51,7 @@ func TestNewEmail(t *testing.T) {
 
 		assert.NotNil(t, email)
 		assert.True(t, notification.HasErrors())
-		assert.Equal(t, notification.CountErrors(), 3)
+		assert.Equal(t, 3, notification.CountErrors())
 		assert.Contains(t, notification.String(), "invalid email format: '@' is misplaced")
 		assert.Contains(t, notification.String(), "email address does not match the required format")
 		assert.Contains(t, notification.String(), "domain part of the email is invalid")
@@ -62,7 +62,7 @@ func TestNewEmail(t *testing.T) {
 
 		assert.NotNil(t, email)
 		assert.True(t, notification.HasErrors())
-		assert.Equal(t, notification.CountErrors(), 2)
+		assert.Equal(t, 2, notification.CountErrors())
 		assert.Contains(t, notification.String(), "domain part of the email is invalid")
 		assert.Contains(t, notification.String(), "email address does not match the required format")
 	})
@@ -72,7 +72,7 @@ func TestNewEmail(t *testing.T) {
 
 		assert.NotNil(t, email)
 		assert.True(t, notification.HasErrors())
-		assert.Equal(t, notification.CountErrors(), 1)
+		assert.Equal(t, 1, notification.CountErrors())
 		assert.Contains(t, notification.String(), "email address does not match the required format")
 	})
 
@@ -81,7 +81,7 @@ func TestNewEmail(t *testing.T) {
 
 		assert.NotNil(t, email)
 		assert.True(t, notification.HasErrors())
-		assert.Equal(t, notification.CountErrors(), 1)
+		assert.Equal(t, 1, notification.CountErrors())
 		assert.Contains(t, notification.String(), "email address does not match the required format")
 	})
 
