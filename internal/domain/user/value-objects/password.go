@@ -1,8 +1,10 @@
 package valueobjects
 
 import (
+	"errors"
 	"strings"
 
+	"github.com/IsaqueAmorim/noteflow/internal/domain/notification"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -11,37 +13,52 @@ type Password struct {
 	salt string
 }
 
-func NewPassword(plainText string) *Password {
-	validate(plainText)
+var bcryptFunc = bcrypt.GenerateFromPassword
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(plainText), bcrypt.DefaultCost)
+func NewPassword(plainText string) (*Password, *notification.Notification) {
+	notification := validate(plainText)
+
+	if notification.HasErrors() {
+		return &Password{}, notification
+	}
+
+	hash, err := bcryptFunc([]byte(plainText), bcrypt.DefaultCost)
 	if err != nil {
-		return &Password{}
+		notification.AddError(err)
+		return &Password{}, notification
 	}
 
 	return &Password{
 		hash: string(hash),
 		salt: "",
-	}
+	}, notification
 }
 
-func validate(s string) {
+func validate(s string) *notification.Notification {
 
+	notification := notification.NewNotification()
+
+	if strings.TrimSpace(s) == "" {
+		notification.AddError(errors.New("Password cannot be empty"))
+		return notification
+	}
 	if len(s) < 8 {
-		println("Error: Password must be at least 8 characters long")
+		notification.AddError(errors.New("Password must be at least 8 characters long"))
 	}
 	if !strings.ContainsAny(s, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-		println("Error: Password must contain at least one uppercase letter")
+		notification.AddError(errors.New("Password must contain at least one uppercase letter"))
 	}
 	if !strings.ContainsAny(s, "abcdefghijklmnopqrstuvwxyz") {
-		println("Error: Password must contain at least one lowercase letter")
+		notification.AddError(errors.New("Password must contain at least one lowercase letter"))
 	}
 	if !strings.ContainsAny(s, "0123456789") {
-		println("Error: Password must contain at least one number")
+		notification.AddError(errors.New("Password must contain at least one number"))
 	}
 	if !strings.ContainsAny(s, "!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~") {
-		println("Error: Password must contain at least one special character")
+		notification.AddError(errors.New("Password must contain at least one special character"))
 	}
+
+	return notification
 }
 
 func (p Password) Check(plainText string) bool {
